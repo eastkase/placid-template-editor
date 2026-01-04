@@ -41,7 +41,7 @@
 .layer-wrapper {
   border: 2px solid transparent;
   transition: border-color 0.2s ease;
-  position: relative;
+  position: absolute !important;
 }
 
 .layer-wrapper:hover {
@@ -51,6 +51,13 @@
 .layer-wrapper.selected {
   border-color: #9333ea !important;
   box-shadow: 0 0 0 1px rgba(147, 51, 234, 0.2);
+}
+
+/* Text editing */
+.layer-wrapper textarea {
+  border: none;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* React RND Resize Handles */

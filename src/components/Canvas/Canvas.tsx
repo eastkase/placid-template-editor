@@ -12,106 +12,72 @@ const Canvas: React.FC = () => {
     selectedLayerId, 
     selectLayer, 
     updateLayer,
-    zoom,
     showGrid,
     snapToGrid: shouldSnap,
     gridSize
   } = useEditorStore();
   
   const canvasRef = useRef<HTMLDivElement>(null);
-  const [canvasScale, setCanvasScale] = React.useState(1);
-
-  useEffect(() => {
-    const updateScale = () => {
-      if (canvasRef.current) {
-        const container = canvasRef.current.parentElement;
-        if (container) {
-          const containerWidth = container.clientWidth - 80; // padding
-          const containerHeight = container.clientHeight - 80;
-          const scaleX = containerWidth / template.width;
-          const scaleY = containerHeight / template.height;
-          const newScale = Math.min(scaleX, scaleY, 1) * zoom;
-          setCanvasScale(newScale);
-        }
-      }
-    };
-
-    updateScale();
-    window.addEventListener('resize', updateScale);
-    return () => window.removeEventListener('resize', updateScale);
-  }, [template.width, template.height, zoom]);
+  const [editingLayerId, setEditingLayerId] = React.useState<string | null>(null);
 
   const snapToGrid = (value: number): number => {
     if (!shouldSnap) return value;
     return Math.round(value / gridSize) * gridSize;
   };
 
-  const renderLayer = (layer: Layer) => {
-    switch (layer.type) {
-      case 'text':
-        return <TextLayerPreview layer={layer} />;
-      case 'image':
-        return <ImageLayerPreview layer={layer} />;
-      case 'shape':
-        return <ShapeLayerPreview layer={layer} />;
-      default:
-        return null;
-    }
-  };
-
   const handleBackgroundClick = () => {
     selectLayer(null);
+    setEditingLayerId(null);
+  };
+
+  const handleLayerDoubleClick = (layerId: string) => {
+    const layer = template.layers.find(l => l.id === layerId);
+    if (layer?.type === 'text') {
+      setEditingLayerId(layerId);
+    }
   };
 
   // Sort layers by z-index for rendering
   const sortedLayers = [...template.layers].sort((a, b) => a.zIndex - b.zIndex);
 
   return (
-    <div className="canvas-container" onClick={handleBackgroundClick}>
-      <div className="relative">
-        {/* Canvas Board */}
-        <div
-          ref={canvasRef}
-          className="canvas-board"
-          style={{
-            width: template.width,
-            height: template.height,
-            backgroundColor: template.backgroundColor || '#ffffff',
-            transform: `scale(${canvasScale})`,
-            transformOrigin: 'center',
-            position: 'relative'
-          }}
-        >
-          {/* Grid Overlay */}
-          {showGrid && (
-            <div className="canvas-grid" />
-          )}
+    <div 
+      ref={canvasRef}
+      className="canvas-board"
+      style={{
+        width: template.width,
+        height: template.height,
+        backgroundColor: template.backgroundColor || '#ffffff',
+        position: 'relative'
+      }}
+      onClick={handleBackgroundClick}
+    >
+      {/* Grid Overlay */}
+      {showGrid && (
+        <div className="canvas-grid" />
+      )}
 
-          {/* Render Layers */}
-          {sortedLayers.map((layer) => {
-            if (!layer.visible) return null;
+      {/* Render Layers */}
+      {sortedLayers.map((layer) => {
+        if (!layer.visible) return null;
 
-            const isSelected = layer.id === selectedLayerId;
+        const isSelected = layer.id === selectedLayerId;
+        const isEditing = layer.id === editingLayerId;
 
-            return (
-              <LayerRenderer
-                key={layer.id}
-                layer={layer}
-                isSelected={isSelected}
-                zoom={1} // We use canvas scale instead of per-layer zoom
-                onSelect={() => selectLayer(layer.id)}
-                onUpdate={(updates) => updateLayer(layer.id, updates)}
-                snapToGrid={snapToGrid}
-              />
-            );
-          })}
-        </div>
-
-        {/* Canvas Info */}
-        <div className="absolute -bottom-8 left-0 text-xs text-gray-500">
-          {template.width} × {template.height}px • Zoom: {Math.round(canvasScale * 100)}%
-        </div>
-      </div>
+        return (
+          <LayerRenderer
+            key={layer.id}
+            layer={layer}
+            isSelected={isSelected}
+            isEditing={isEditing}
+            onSelect={() => selectLayer(layer.id)}
+            onDoubleClick={() => handleLayerDoubleClick(layer.id)}
+            onUpdate={(updates) => updateLayer(layer.id, updates)}
+            onStopEditing={() => setEditingLayerId(null)}
+            snapToGrid={snapToGrid}
+          />
+        );
+      })}
     </div>
   );
 };
@@ -120,12 +86,46 @@ const Canvas: React.FC = () => {
 const LayerRenderer: React.FC<{
   layer: Layer;
   isSelected: boolean;
-  zoom: number;
+  isEditing: boolean;
   onSelect: () => void;
+  onDoubleClick: () => void;
   onUpdate: (updates: Partial<Layer>) => void;
+  onStopEditing: () => void;
   snapToGrid: (value: number) => number;
-}> = ({ layer, isSelected, zoom, onSelect, onUpdate, snapToGrid }) => {
+}> = ({ layer, isSelected, isEditing, onSelect, onDoubleClick, onUpdate, onStopEditing, snapToGrid }) => {
+  const [textValue, setTextValue] = React.useState(layer.type === 'text' ? layer.text : '');
+
   const renderLayer = (layer: Layer) => {
+    if (layer.type === 'text' && isEditing) {
+      return (
+        <textarea
+          value={textValue}
+          onChange={(e) => setTextValue(e.target.value)}
+          onBlur={() => {
+            onUpdate({ text: textValue });
+            onStopEditing();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setTextValue(layer.text);
+              onStopEditing();
+            }
+          }}
+          className="w-full h-full resize-none outline-none bg-transparent"
+          style={{
+            fontSize: layer.fontSize || 16,
+            fontFamily: layer.fontFamily || 'Arial',
+            fontWeight: layer.fontWeight || 'normal',
+            textAlign: layer.textAlign || 'left',
+            color: layer.color || '#000000',
+            padding: '4px',
+            lineHeight: layer.lineHeight || 1.2,
+          }}
+          autoFocus
+        />
+      );
+    }
+
     switch (layer.type) {
       case 'text':
         return <TextLayerPreview layer={layer} />;
@@ -141,30 +141,30 @@ const LayerRenderer: React.FC<{
   return (
     <Rnd
       size={{
-        width: layer.size.width * zoom,
-        height: layer.size.height * zoom
+        width: layer.size.width,
+        height: layer.size.height
       }}
       position={{
-        x: layer.position.x * zoom,
-        y: layer.position.y * zoom
+        x: layer.position.x,
+        y: layer.position.y
       }}
       onDragStop={(e, d) => {
         onUpdate({
           position: {
-            x: snapToGrid(Math.round(d.x / zoom)),
-            y: snapToGrid(Math.round(d.y / zoom))
+            x: snapToGrid(d.x),
+            y: snapToGrid(d.y)
           }
         });
       }}
       onResizeStop={(e, direction, ref, delta, position) => {
         onUpdate({
           size: {
-            width: snapToGrid(Math.round(parseInt(ref.style.width) / zoom)),
-            height: snapToGrid(Math.round(parseInt(ref.style.height) / zoom))
+            width: snapToGrid(parseInt(ref.style.width)),
+            height: snapToGrid(parseInt(ref.style.height))
           },
           position: {
-            x: snapToGrid(Math.round(position.x / zoom)),
-            y: snapToGrid(Math.round(position.y / zoom))
+            x: snapToGrid(position.x),
+            y: snapToGrid(position.y)
           }
         });
       }}
@@ -172,10 +172,14 @@ const LayerRenderer: React.FC<{
         e.stopPropagation();
         onSelect();
       }}
-      className={`layer-wrapper ${isSelected ? 'selected' : ''} ${layer.locked ? 'cursor-not-allowed' : 'cursor-move'}`}
+      onDoubleClick={(e: React.MouseEvent) => {
+        e.stopPropagation();
+        onDoubleClick();
+      }}
+      className={`layer-wrapper ${isSelected ? 'selected' : ''} ${layer.locked ? 'cursor-not-allowed' : ''}`}
       bounds="parent"
-      enableResizing={isSelected && !layer.locked}
-      disableDragging={layer.locked}
+      enableResizing={isSelected && !layer.locked && !isEditing}
+      disableDragging={layer.locked || isEditing}
       lockAspectRatio={false}
       resizeHandleClasses={{
         top: 'react-resizable-handle react-resizable-handle-n',
@@ -187,30 +191,21 @@ const LayerRenderer: React.FC<{
         bottomLeft: 'react-resizable-handle react-resizable-handle-sw',
         bottomRight: 'react-resizable-handle react-resizable-handle-se'
       }}
-      resizeHandleStyles={{
-        top: { top: '-5px', left: '50%', marginLeft: '-5px' },
-        right: { right: '-5px', top: '50%', marginTop: '-5px' },
-        bottom: { bottom: '-5px', left: '50%', marginLeft: '-5px' },
-        left: { left: '-5px', top: '50%', marginTop: '-5px' },
-        topLeft: { top: '-5px', left: '-5px' },
-        topRight: { top: '-5px', right: '-5px' },
-        bottomLeft: { bottom: '-5px', left: '-5px' },
-        bottomRight: { bottom: '-5px', right: '-5px' }
-      }}
     >
       <div 
-        className="relative w-full h-full"
+        className="w-full h-full"
         style={{
           transform: layer.rotation ? `rotate(${layer.rotation}deg)` : undefined,
           opacity: layer.opacity || 1,
-          pointerEvents: layer.locked ? 'none' : 'auto'
+          pointerEvents: layer.locked ? 'none' : 'auto',
+          cursor: layer.locked ? 'not-allowed' : isEditing ? 'text' : 'move'
         }}
       >
         {renderLayer(layer)}
         
         {/* Selection Indicator */}
-        {isSelected && !layer.locked && (
-          <div className="absolute inset-0 border-2 border-purple-500 pointer-events-none rounded-sm">
+        {isSelected && !layer.locked && !isEditing && (
+          <div className="absolute inset-0 border-2 border-purple-500 pointer-events-none rounded">
             <div className="absolute -top-6 left-0 text-xs bg-purple-500 text-white px-2 py-1 rounded">
               {layer.name}
             </div>
