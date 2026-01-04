@@ -162,8 +162,8 @@ const TextProperties: React.FC<Props> = ({ layer }) => {
         <label className="text-xs font-medium text-gray-700 mb-1 block">Text Style</label>
         <div className="flex gap-1">
           <button
-            onClick={() => handleUpdate({ fontWeight: layer.fontWeight === '700' ? '400' : '700' })}
-            className={`p-1.5 rounded ${layer.fontWeight >= '700' ? 'bg-purple-100 text-purple-600' : 'hover:bg-gray-100'}`}
+            onClick={() => handleUpdate({ fontWeight: (layer.fontWeight || '400') === '700' ? '400' : '700' })}
+            className={`p-1.5 rounded ${(layer.fontWeight || '400') >= '700' ? 'bg-purple-100 text-purple-600' : 'hover:bg-gray-100'}`}
             title="Bold"
           >
             <Bold size={16} />

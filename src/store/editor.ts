@@ -176,7 +176,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
   updateLayer: (layerId, updates) => {
     set(state => {
       const newLayers = state.template.layers.map(layer =>
-        layer.id === layerId ? { ...layer, ...updates } : layer
+        layer.id === layerId ? { ...layer, ...updates } as Layer : layer
       );
       const newTemplate = { ...state.template, layers: newLayers };
       
@@ -189,7 +189,8 @@ const useEditorStore = create<EditorState>((set, get) => ({
       return {
         template: newTemplate,
         history: newHistory,
-        historyIndex: newHistory.length - 1
+        historyIndex: newHistory.length - 1,
+        hasUnsavedChanges: true
       };
     });
   },

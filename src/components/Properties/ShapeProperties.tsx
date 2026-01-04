@@ -164,7 +164,14 @@ const ShapeProperties: React.FC<Props> = ({ layer }) => {
             <select
               value={layer.gradient.type}
               onChange={(e) => handleUpdate({ 
-                gradient: { ...layer.gradient, type: e.target.value as any }
+                gradient: { 
+                  type: e.target.value as 'linear' | 'radial',
+                  colors: layer.gradient?.colors || [
+                    { color: '#000000', offset: 0 },
+                    { color: '#ffffff', offset: 1 }
+                  ],
+                  angle: layer.gradient?.angle
+                }
               })}
               className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
             >
@@ -180,7 +187,11 @@ const ShapeProperties: React.FC<Props> = ({ layer }) => {
                 type="number"
                 value={layer.gradient.angle || 0}
                 onChange={(e) => handleUpdate({ 
-                  gradient: { ...layer.gradient, angle: parseInt(e.target.value) || 0 }
+                  gradient: { 
+                    type: layer.gradient?.type || 'linear',
+                    colors: layer.gradient?.colors || [],
+                    angle: parseInt(e.target.value) || 0 
+                  }
                 })}
                 min="0"
                 max="360"
@@ -192,7 +203,7 @@ const ShapeProperties: React.FC<Props> = ({ layer }) => {
           <div>
             <label className="text-xs font-medium text-gray-700">Gradient Stops</label>
             <div className="space-y-1">
-              {layer.gradient.colors.map((stop, index) => (
+              {layer.gradient?.colors.map((stop, index) => (
                 <div key={index} className="flex gap-1 items-center">
                   <input
                     type="color"
@@ -217,7 +228,7 @@ const ShapeProperties: React.FC<Props> = ({ layer }) => {
                     className="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
                   />
                   <span className="text-xs">%</span>
-                  {layer.gradient.colors.length > 2 && (
+                  {layer.gradient && layer.gradient.colors.length > 2 && (
                     <button
                       onClick={() => removeGradientStop(index)}
                       className="p-1 hover:bg-gray-100 rounded text-red-600"
