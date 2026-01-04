@@ -81,9 +81,9 @@ const Toolbar: React.FC = () => {
 
   return (
     <>
-      <div className="toolbar">
+      <div className="toolbar bg-white shadow-lg border-b border-gray-200">
         {/* Template name */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {isEditingName ? (
             <input
               type="text"
@@ -119,24 +119,27 @@ const Toolbar: React.FC = () => {
         <div className="toolbar-group border-l border-gray-200 pl-4">
           <button
             onClick={handleAddTextLayer}
-            className="p-2 hover:bg-gray-100 rounded transition-colors"
+            className="btn-icon group"
             title="Add text layer"
           >
-            <Type size={20} />
+            <Type size={20} className="group-hover:scale-110 transition-transform" />
+            <span className="sr-only">Add Text</span>
           </button>
           <button
             onClick={handleAddImageLayer}
-            className="p-2 hover:bg-gray-100 rounded transition-colors"
+            className="btn-icon group"
             title="Add image layer"
           >
-            <Image size={20} />
+            <Image size={20} className="group-hover:scale-110 transition-transform" />
+            <span className="sr-only">Add Image</span>
           </button>
           <button
             onClick={handleAddShapeLayer}
-            className="p-2 hover:bg-gray-100 rounded transition-colors"
+            className="btn-icon group"
             title="Add shape layer"
           >
-            <Square size={20} />
+            <Square size={20} className="group-hover:scale-110 transition-transform" />
+            <span className="sr-only">Add Shape</span>
           </button>
         </div>
 
@@ -228,7 +231,7 @@ const Toolbar: React.FC = () => {
           </button>
           <button
             onClick={() => setShowExportModal(true)}
-            className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors flex items-center gap-2"
+            className="btn-primary flex items-center gap-2"
           >
             <Download size={18} />
             Export

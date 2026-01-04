@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Rnd } from 'react-rnd';
 import useEditorStore from '../../store/editor';
 import { Layer } from '../../types';
-import ImageLayerPreview from '../LayerPreview/ImageLayerPreview';
 import TextLayerPreview from '../LayerPreview/TextLayerPreview';
+import ImageLayerPreview from '../LayerPreview/ImageLayerPreview';
 import ShapeLayerPreview from '../LayerPreview/ShapeLayerPreview';
 
 const Canvas: React.FC = () => {
@@ -11,110 +11,132 @@ const Canvas: React.FC = () => {
     template, 
     selectedLayerId, 
     selectLayer, 
-    updateLayer, 
+    updateLayer,
     zoom,
     showGrid,
-    snapToGrid,
+    snapToGrid: shouldSnap,
     gridSize
   } = useEditorStore();
+  
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const [canvasScale, setCanvasScale] = React.useState(1);
 
-  const handleLayerUpdate = (layerId: string, updates: Partial<Layer>) => {
-    updateLayer(layerId, updates);
-  };
+  useEffect(() => {
+    const updateScale = () => {
+      if (canvasRef.current) {
+        const container = canvasRef.current.parentElement;
+        if (container) {
+          const containerWidth = container.clientWidth - 80; // padding
+          const containerHeight = container.clientHeight - 80;
+          const scaleX = containerWidth / template.width;
+          const scaleY = containerHeight / template.height;
+          const newScale = Math.min(scaleX, scaleY, 1) * zoom;
+          setCanvasScale(newScale);
+        }
+      }
+    };
 
-  const snapToGridValue = (value: number) => {
-    if (!snapToGrid) return value;
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    return () => window.removeEventListener('resize', updateScale);
+  }, [template.width, template.height, zoom]);
+
+  const snapToGrid = (value: number): number => {
+    if (!shouldSnap) return value;
     return Math.round(value / gridSize) * gridSize;
   };
 
+  const renderLayer = (layer: Layer) => {
+    switch (layer.type) {
+      case 'text':
+        return <TextLayerPreview layer={layer} />;
+      case 'image':
+        return <ImageLayerPreview layer={layer} />;
+      case 'shape':
+        return <ShapeLayerPreview layer={layer} />;
+      default:
+        return null;
+    }
+  };
+
+  const handleBackgroundClick = () => {
+    selectLayer(null);
+  };
+
+  // Sort layers by z-index for rendering
+  const sortedLayers = [...template.layers].sort((a, b) => a.zIndex - b.zIndex);
+
   return (
-    <div className="canvas-container flex-1 overflow-auto p-8">
-      <div className="relative inline-block">
-        <div 
-          className="canvas relative bg-white shadow-2xl"
+    <div className="canvas-container" onClick={handleBackgroundClick}>
+      <div className="relative">
+        {/* Canvas Board */}
+        <div
+          ref={canvasRef}
+          className="canvas-board"
           style={{
-            width: template.width * zoom,
-            height: template.height * zoom,
+            width: template.width,
+            height: template.height,
             backgroundColor: template.backgroundColor || '#ffffff',
-            backgroundImage: showGrid ? `
-              repeating-linear-gradient(
-                0deg,
-                #e5e7eb 0px,
-                transparent 1px,
-                transparent ${gridSize * zoom}px,
-                #e5e7eb ${gridSize * zoom}px
-              ),
-              repeating-linear-gradient(
-                90deg,
-                #e5e7eb 0px,
-                transparent 1px,
-                transparent ${gridSize * zoom}px,
-                #e5e7eb ${gridSize * zoom}px
-              )
-            ` : undefined
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) selectLayer(null);
+            transform: `scale(${canvasScale})`,
+            transformOrigin: 'center',
+            position: 'relative'
           }}
         >
-          {/* Render layers in z-order */}
-          {[...template.layers]
-            .sort((a, b) => a.zIndex - b.zIndex)
-            .map(layer => (
-              <LayerWrapper
+          {/* Grid Overlay */}
+          {showGrid && (
+            <div className="canvas-grid" />
+          )}
+
+          {/* Render Layers */}
+          {sortedLayers.map((layer) => {
+            if (!layer.visible) return null;
+
+            const isSelected = layer.id === selectedLayerId;
+
+            return (
+              <LayerRenderer
                 key={layer.id}
                 layer={layer}
-                isSelected={layer.id === selectedLayerId}
-                zoom={zoom}
+                isSelected={isSelected}
+                zoom={1} // We use canvas scale instead of per-layer zoom
                 onSelect={() => selectLayer(layer.id)}
-                onUpdate={(updates) => handleLayerUpdate(layer.id, updates)}
-                snapToGrid={snapToGridValue}
+                onUpdate={(updates) => updateLayer(layer.id, updates)}
+                snapToGrid={snapToGrid}
               />
-            ))
-          }
+            );
+          })}
+        </div>
+
+        {/* Canvas Info */}
+        <div className="absolute -bottom-8 left-0 text-xs text-gray-500">
+          {template.width} × {template.height}px • Zoom: {Math.round(canvasScale * 100)}%
         </div>
       </div>
     </div>
   );
 };
 
-interface LayerWrapperProps {
+// Separate component for layer rendering with Rnd
+const LayerRenderer: React.FC<{
   layer: Layer;
   isSelected: boolean;
   zoom: number;
   onSelect: () => void;
   onUpdate: (updates: Partial<Layer>) => void;
   snapToGrid: (value: number) => number;
-}
-
-const LayerWrapper: React.FC<LayerWrapperProps> = ({ 
-  layer, 
-  isSelected, 
-  zoom, 
-  onSelect, 
-  onUpdate,
-  snapToGrid
-}) => {
-  if (!layer.visible) return null;
-
-  if (layer.locked && !isSelected) {
-    return (
-      <div
-        style={{
-          position: 'absolute',
-          left: layer.position.x * zoom,
-          top: layer.position.y * zoom,
-          width: layer.size.width * zoom,
-          height: layer.size.height * zoom,
-          opacity: layer.opacity ?? 1,
-          transform: layer.rotation ? `rotate(${layer.rotation}deg)` : undefined,
-          pointerEvents: 'none'
-        }}
-      >
-        <LayerPreview layer={layer} />
-      </div>
-    );
-  }
+}> = ({ layer, isSelected, zoom, onSelect, onUpdate, snapToGrid }) => {
+  const renderLayer = (layer: Layer) => {
+    switch (layer.type) {
+      case 'text':
+        return <TextLayerPreview layer={layer} />;
+      case 'image':
+        return <ImageLayerPreview layer={layer} />;
+      case 'shape':
+        return <ShapeLayerPreview layer={layer} />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <Rnd
@@ -155,43 +177,48 @@ const LayerWrapper: React.FC<LayerWrapperProps> = ({
       enableResizing={isSelected && !layer.locked}
       disableDragging={layer.locked}
       lockAspectRatio={false}
+      resizeHandleClasses={{
+        top: 'react-resizable-handle react-resizable-handle-n',
+        right: 'react-resizable-handle react-resizable-handle-e',
+        bottom: 'react-resizable-handle react-resizable-handle-s',
+        left: 'react-resizable-handle react-resizable-handle-w',
+        topLeft: 'react-resizable-handle react-resizable-handle-nw',
+        topRight: 'react-resizable-handle react-resizable-handle-ne',
+        bottomLeft: 'react-resizable-handle react-resizable-handle-sw',
+        bottomRight: 'react-resizable-handle react-resizable-handle-se'
+      }}
       resizeHandleStyles={{
-        top: { cursor: 'ns-resize' },
-        right: { cursor: 'ew-resize' },
-        bottom: { cursor: 'ns-resize' },
-        left: { cursor: 'ew-resize' },
-        topRight: { cursor: 'nesw-resize' },
-        bottomRight: { cursor: 'nwse-resize' },
-        bottomLeft: { cursor: 'nesw-resize' },
-        topLeft: { cursor: 'nwse-resize' }
+        top: { top: '-5px', left: '50%', marginLeft: '-5px' },
+        right: { right: '-5px', top: '50%', marginTop: '-5px' },
+        bottom: { bottom: '-5px', left: '50%', marginLeft: '-5px' },
+        left: { left: '-5px', top: '50%', marginTop: '-5px' },
+        topLeft: { top: '-5px', left: '-5px' },
+        topRight: { top: '-5px', right: '-5px' },
+        bottomLeft: { bottom: '-5px', left: '-5px' },
+        bottomRight: { bottom: '-5px', right: '-5px' }
       }}
     >
       <div 
-        style={{ 
-          width: '100%', 
-          height: '100%',
-          opacity: layer.opacity ?? 1,
+        className="relative w-full h-full"
+        style={{
           transform: layer.rotation ? `rotate(${layer.rotation}deg)` : undefined,
-          transformOrigin: 'center'
+          opacity: layer.opacity || 1,
+          pointerEvents: layer.locked ? 'none' : 'auto'
         }}
       >
-        <LayerPreview layer={layer} />
+        {renderLayer(layer)}
+        
+        {/* Selection Indicator */}
+        {isSelected && !layer.locked && (
+          <div className="absolute inset-0 border-2 border-purple-500 pointer-events-none rounded-sm">
+            <div className="absolute -top-6 left-0 text-xs bg-purple-500 text-white px-2 py-1 rounded">
+              {layer.name}
+            </div>
+          </div>
+        )}
       </div>
     </Rnd>
   );
-};
-
-const LayerPreview: React.FC<{ layer: Layer }> = ({ layer }) => {
-  switch (layer.type) {
-    case 'image':
-      return <ImageLayerPreview layer={layer} />;
-    case 'text':
-      return <TextLayerPreview layer={layer} />;
-    case 'shape':
-      return <ShapeLayerPreview layer={layer} />;
-    default:
-      return null;
-  }
 };
 
 export default Canvas;
