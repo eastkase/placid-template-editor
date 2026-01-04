@@ -60,6 +60,33 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Alignment Guides */
+.alignment-guide-h {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #9333ea;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.alignment-guide-v {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #9333ea;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* Layer states */
+.layer-wrapper.locked {
+  opacity: 0.7;
+  cursor: not-allowed !important;
+}
+
 /* React RND Resize Handles */
 .react-resizable-handle {
   position: absolute;

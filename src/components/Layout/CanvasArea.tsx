@@ -1,7 +1,7 @@
 import React from 'react';
 import { ZoomIn, ZoomOut, Maximize } from 'lucide-react';
 import useEditorStore from '../../store/editor';
-import Canvas from '../Canvas/Canvas';
+import Canvas from '../Canvas/CanvasNew';
 
 const CanvasArea: React.FC = () => {
   const { template, showGrid, zoom, setZoom } = useEditorStore();
