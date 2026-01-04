@@ -3,9 +3,9 @@ import useEditorStore from '../../store/editor';
 import type { TextLayer, ImageLayer, ShapeLayer } from '../../types';
 
 const PropertiesPanel: React.FC = () => {
-  const { selectedLayerId, layers, updateLayer } = useEditorStore();
+  const { selectedLayerId, template, updateLayer } = useEditorStore();
   
-  const selectedLayer = layers.find(layer => layer.id === selectedLayerId);
+  const selectedLayer = template.layers.find(layer => layer.id === selectedLayerId);
   
   if (!selectedLayer) {
     return (

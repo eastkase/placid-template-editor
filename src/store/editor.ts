@@ -20,9 +20,6 @@ interface EditorState {
   history: Template[];
   historyIndex: number;
   
-  // Computed properties
-  layers: Layer[];
-  
   // Actions
   setTemplate: (template: Template) => void;
   loadTemplate: (template: Template) => void;
@@ -147,10 +144,6 @@ const useEditorStore = create<EditorState>((set, get) => ({
   history: [],
   historyIndex: -1,
   
-  // Computed properties
-  get layers() {
-    return get().template.layers;
-  },
   
   setTemplate: (template) => {
     set({ template, selectedLayerId: null, hasUnsavedChanges: true });

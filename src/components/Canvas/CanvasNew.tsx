@@ -9,7 +9,6 @@ import ShapeLayerPreview from '../LayerPreview/ShapeLayerPreview';
 const Canvas: React.FC = () => {
   const { 
     template, 
-    layers,
     selectedLayerId, 
     selectLayer, 
     updateLayer,
@@ -17,6 +16,8 @@ const Canvas: React.FC = () => {
     snapToGrid: shouldSnap,
     gridSize
   } = useEditorStore();
+  
+  const layers = template.layers;
   
   const canvasRef = useRef<HTMLDivElement>(null);
   const [editingLayerId, setEditingLayerId] = useState<string | null>(null);

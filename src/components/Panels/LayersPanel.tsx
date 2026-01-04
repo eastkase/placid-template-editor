@@ -17,13 +17,15 @@ import type { Layer } from '../../types';
 
 const LayersPanel: React.FC = () => {
   const { 
-    layers, 
+    template,
     selectedLayerId, 
     selectLayer, 
     updateLayer, 
     deleteLayer,
     reorderLayers 
   } = useEditorStore();
+  
+  const layers = template.layers;
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     e.dataTransfer.effectAllowed = 'move';
