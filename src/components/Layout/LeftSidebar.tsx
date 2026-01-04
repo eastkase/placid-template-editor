@@ -37,13 +37,19 @@ const LeftSidebar: React.FC = () => {
       id: 'text', 
       icon: Type, 
       label: 'Add Text',
-      action: () => addLayer(createDefaultTextLayer())
+      action: () => {
+        const layer = createDefaultTextLayer();
+        addLayer(layer);
+      }
     },
     { 
       id: 'image', 
       icon: Image, 
       label: 'Add Image',
-      action: () => addLayer(createDefaultImageLayer())
+      action: () => {
+        const layer = createDefaultImageLayer();
+        addLayer(layer);
+      }
     },
     { 
       id: 'rectangle', 
