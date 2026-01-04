@@ -74,6 +74,11 @@ function createDefaultTextLayer(): TextLayer {
     visible: true,
     opacity: 1,
     text: 'Add your text here',
+    fontSize: 32,
+    fontFamily: 'Arial',
+    fontWeight: '400',
+    fontStyle: 'normal',
+    textAlign: 'center',
     font: {
       family: 'Arial',
       size: 32,
@@ -89,7 +94,9 @@ function createDefaultTextLayer(): TextLayer {
       maxWidth: 400,
       maxHeight: 100,
       overflow: 'shrink',
+      autoShrink: false,
       minFontSize: 12,
+      maxFontSize: 32,
       padding: { top: 10, right: 10, bottom: 10, left: 10 }
     }
   };

@@ -8,6 +8,8 @@ export interface Template {
   outputFormat: 'png' | 'jpg' | 'webp' | 'mp4' | 'gif';
   fps?: number;
   duration?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export type Layer = ImageLayer | TextLayer | ShapeLayer | VideoLayer;
@@ -29,7 +31,7 @@ export interface BaseLayer {
 export interface ImageLayer extends BaseLayer {
   type: 'image';
   src?: string;
-  fit: 'cover' | 'contain' | 'fill' | 'none';
+  fit: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
   filters?: {
     grayscale?: boolean;
     brightness?: number;
@@ -37,7 +39,7 @@ export interface ImageLayer extends BaseLayer {
     blur?: number;
     sepia?: boolean;
   };
-  mask?: 'none' | 'circle' | 'rounded';
+  mask?: 'none' | 'circle' | 'rounded' | 'rectangle';
   borderRadius?: number;
   border?: {
     width: number;
@@ -48,6 +50,12 @@ export interface ImageLayer extends BaseLayer {
 export interface TextLayer extends BaseLayer {
   type: 'text';
   text: string;
+  fontSize?: number;
+  fontFamily?: string;
+  fontWeight?: string;
+  fontStyle?: 'normal' | 'italic';
+  textAlign?: 'left' | 'center' | 'right' | 'justify';
+  textDecoration?: 'none' | 'underline' | 'overline' | 'line-through';
   font: {
     family: string;
     size: number;
@@ -66,7 +74,9 @@ export interface TextLayer extends BaseLayer {
     maxWidth: number;
     maxHeight: number;
     overflow: 'shrink' | 'truncate' | 'ellipsis' | 'wrap';
+    autoShrink?: boolean;
     minFontSize?: number;
+    maxFontSize?: number;
     padding?: { top: number; right: number; bottom: number; left: number };
   };
   

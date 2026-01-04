@@ -62,7 +62,9 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
       } else {
         // Create new template
         const created = await templateAPI.createTemplate(template);
-        setSavedTemplateId(created.id);
+        if (created.id) {
+          setSavedTemplateId(created.id);
+        }
       }
       
       setHasUnsavedChanges(false);
@@ -85,7 +87,9 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
         ...template,
         name
       });
-      setSavedTemplateId(created.id);
+      if (created.id) {
+        setSavedTemplateId(created.id);
+      }
       setHasUnsavedChanges(false);
       await fetchTemplates();
     } catch (err) {
@@ -104,12 +108,14 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
     }
 
     loadTemplate(templateToLoad);
-    setSavedTemplateId(templateToLoad.id);
+    if (templateToLoad.id) {
+      setSavedTemplateId(templateToLoad.id);
+    }
     onClose();
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this template?')) return;
+  const handleDelete = async (id: string | undefined) => {
+    if (!id || !confirm('Are you sure you want to delete this template?')) return;
 
     try {
       await templateAPI.deleteTemplate(id);
@@ -123,7 +129,8 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
     }
   };
 
-  const handleDuplicate = async (id: string) => {
+  const handleDuplicate = async (id: string | undefined) => {
+    if (!id) return;
     try {
       await templateAPI.duplicateTemplate(id);
       await fetchTemplates();
@@ -133,8 +140,8 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
     }
   };
 
-  const handleRename = async (id: string) => {
-    if (!editingName.trim()) return;
+  const handleRename = async (id: string | undefined) => {
+    if (!id || !editingName.trim()) return;
 
     try {
       await templateAPI.updateTemplate(id, { name: editingName });
@@ -216,7 +223,7 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
             <div className="grid grid-cols-2 gap-4">
               {templates.map((tmpl) => (
                 <div
-                  key={tmpl.id}
+                  key={tmpl.id || `template-${Math.random()}`}
                   className={`border rounded-lg p-4 hover:shadow-md transition-shadow ${
                     savedTemplateId === tmpl.id ? 'border-purple-500 bg-purple-50' : 'border-gray-200'
                   }`}
@@ -264,8 +271,10 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
                         <div className="flex gap-1">
                           <button
                             onClick={() => {
-                              setEditingId(tmpl.id);
-                              setEditingName(tmpl.name);
+                              if (tmpl.id) {
+                                setEditingId(tmpl.id);
+                                setEditingName(tmpl.name);
+                              }
                             }}
                             className="p-1 text-gray-600 hover:bg-gray-100 rounded"
                             title="Rename"
