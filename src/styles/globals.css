@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Canvas checkered background for transparency */
+.canvas-container {
+  background-color: #1a1a1a;
+  background-image: 
+    linear-gradient(45deg, #2a2a2a 25%, transparent 25%),
+    linear-gradient(-45deg, #2a2a2a 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #2a2a2a 75%),
+    linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+/* Selection handles */
+.layer-wrapper.selected {
+  outline: 2px solid #7c3aed;
+  outline-offset: -1px;
+}
+
+.layer-wrapper .react-rnd-handle {
+  background: #7c3aed;
+  border: 2px solid white;
+  border-radius: 2px;
+  width: 8px;
+  height: 8px;
+}
+
+/* Property panel sections */
+.property-section {
+  @apply border-b border-gray-200 py-3;
+}
+
+.property-section:last-child {
+  @apply border-b-0;
+}
+
+/* Layer list item */
+.layer-item {
+  @apply flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer;
+  @apply hover:bg-gray-100;
+}
+
+.layer-item.selected {
+  @apply bg-purple-100;
+}
+
+.layer-item.dragging {
+  @apply opacity-50;
+}
+
+/* Toolbar */
+.toolbar {
+  @apply flex items-center gap-4 px-4 py-2 border-b border-gray-200 bg-white;
+}
+
+.toolbar-group {
+  @apply flex items-center gap-1;
+}
+
+/* Input fields */
+.input-field {
+  @apply w-full px-2 py-1 border border-gray-300 rounded text-sm;
+  @apply focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent;
+}
+
+.input-label {
+  @apply text-xs text-gray-600 mb-1;
+}
