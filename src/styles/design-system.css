@@ -780,6 +780,10 @@ body {
   width: 100%;
 }
 
+.h-full {
+  height: 100%;
+}
+
 .w-8 {
   width: 2rem;
 }
@@ -1005,4 +1009,32 @@ body {
 
 .opacity-75 {
   opacity: 0.75;
+}
+
+.resize-none {
+  resize: none;
+}
+
+.outline-none {
+  outline: none;
+}
+
+.font-mono {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+.gap-3 {
+  gap: 0.75rem;
+}
+
+.p-6 {
+  padding: 1.5rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.text-xl {
+  font-size: 1.25rem;
 }

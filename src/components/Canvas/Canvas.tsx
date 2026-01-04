@@ -95,6 +95,12 @@ const LayerRenderer: React.FC<{
 }> = ({ layer, isSelected, isEditing, onSelect, onDoubleClick, onUpdate, onStopEditing, snapToGrid }) => {
   const [textValue, setTextValue] = React.useState(layer.type === 'text' ? layer.text : '');
 
+  React.useEffect(() => {
+    if (layer.type === 'text') {
+      setTextValue(layer.text);
+    }
+  }, [layer]);
+
   const renderLayer = (layer: Layer) => {
     if (layer.type === 'text' && isEditing) {
       return (
@@ -111,17 +117,20 @@ const LayerRenderer: React.FC<{
               onStopEditing();
             }
           }}
-          className="w-full h-full resize-none outline-none bg-transparent"
+          className="w-full h-full resize-none outline-none p-2"
           style={{
-            fontSize: layer.fontSize || 16,
-            fontFamily: layer.fontFamily || 'Arial',
-            fontWeight: layer.fontWeight || 'normal',
-            textAlign: layer.textAlign || 'left',
+            fontSize: layer.font?.size || layer.fontSize || 32,
+            fontFamily: layer.font?.family || layer.fontFamily || 'Arial',
+            fontWeight: layer.font?.weight || layer.fontWeight || 'normal',
+            textAlign: layer.alignment || layer.textAlign || 'left',
             color: layer.color || '#000000',
-            padding: '4px',
             lineHeight: layer.lineHeight || 1.2,
+            border: '2px solid #9333ea',
+            borderRadius: '4px',
+            background: 'white'
           }}
           autoFocus
+          onClick={(e) => e.stopPropagation()}
         />
       );
     }

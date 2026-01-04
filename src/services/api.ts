@@ -1,7 +1,9 @@
 import { Template } from '../types';
+import { localStorageService } from './localStorage';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://placid-replace-media-generator-production.up.railway.app';
 const API_KEY = import.meta.env.VITE_API_KEY || '';
+const USE_LOCAL_STORAGE = true; // Set to true to use localStorage instead of API
 
 class TemplateAPI {
   private headers: HeadersInit = {
@@ -10,6 +12,10 @@ class TemplateAPI {
   };
 
   async listTemplates(): Promise<Template[]> {
+    if (USE_LOCAL_STORAGE) {
+      return localStorageService.listTemplates();
+    }
+
     const response = await fetch(`${API_URL}/api/templates`, {
       headers: this.headers
     });
@@ -23,6 +29,10 @@ class TemplateAPI {
   }
 
   async getTemplate(id: string): Promise<Template> {
+    if (USE_LOCAL_STORAGE) {
+      return localStorageService.getTemplate(id);
+    }
+
     const response = await fetch(`${API_URL}/api/templates/${id}`, {
       headers: this.headers
     });
@@ -36,6 +46,10 @@ class TemplateAPI {
   }
 
   async createTemplate(template: Omit<Template, 'id' | 'createdAt' | 'updatedAt'>): Promise<Template> {
+    if (USE_LOCAL_STORAGE) {
+      return localStorageService.createTemplate(template);
+    }
+
     const response = await fetch(`${API_URL}/api/templates`, {
       method: 'POST',
       headers: this.headers,
@@ -51,6 +65,10 @@ class TemplateAPI {
   }
 
   async updateTemplate(id: string, updates: Partial<Template>): Promise<Template> {
+    if (USE_LOCAL_STORAGE) {
+      return localStorageService.updateTemplate(id, updates);
+    }
+
     const response = await fetch(`${API_URL}/api/templates/${id}`, {
       method: 'PUT',
       headers: this.headers,
@@ -66,6 +84,10 @@ class TemplateAPI {
   }
 
   async deleteTemplate(id: string): Promise<void> {
+    if (USE_LOCAL_STORAGE) {
+      return localStorageService.deleteTemplate(id);
+    }
+
     const response = await fetch(`${API_URL}/api/templates/${id}`, {
       method: 'DELETE',
       headers: this.headers
@@ -77,6 +99,10 @@ class TemplateAPI {
   }
 
   async duplicateTemplate(id: string, name?: string): Promise<Template> {
+    if (USE_LOCAL_STORAGE) {
+      return localStorageService.duplicateTemplate(id, name);
+    }
+
     const response = await fetch(`${API_URL}/api/templates/${id}/duplicate`, {
       method: 'POST',
       headers: this.headers,
