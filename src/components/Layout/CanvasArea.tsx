@@ -74,25 +74,27 @@ const CanvasArea: React.FC = () => {
         </div>
       </div>
 
-      <div className="canvas-wrapper">
-        <div 
-          className="canvas-stage"
-          style={{
-            width: template.width,
-            height: template.height,
-            transform: `scale(${zoom})`,
-            transformOrigin: 'center center',
-            position: 'relative'
-          }}
-        >
-          {showGrid && <div className="canvas-grid" />}
-          <Canvas />
+      <div className="canvas-scroll-area">
+        <div className="canvas-container">
+          <div 
+            className="canvas-stage"
+            style={{
+              width: template.width,
+              height: template.height,
+              transform: `scale(${zoom})`,
+              transformOrigin: 'top left',
+            }}
+          >
+            {showGrid && <div className="canvas-grid" />}
+            <Canvas />
+          </div>
         </div>
-        <div className="canvas-info">
-          <span>{template.width} × {template.height}px</span>
-          <span>•</span>
-          <span>{Math.round(zoom * 100)}% zoom</span>
-        </div>
+      </div>
+      
+      <div className="canvas-info">
+        <span>{template.width} × {template.height}px</span>
+        <span>•</span>
+        <span>{Math.round(zoom * 100)}% zoom</span>
       </div>
     </div>
   );

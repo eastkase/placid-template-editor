@@ -175,16 +175,23 @@ body {
   flex: 1;
   background: var(--color-canvas-bg);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-2xl);
-  overflow: auto;
+  flex-direction: column;
   position: relative;
+  overflow: hidden;
 }
 
-.canvas-wrapper {
-  position: relative;
+.canvas-scroll-area {
+  flex: 1;
+  overflow: auto;
+  padding: var(--spacing-2xl);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.canvas-container {
   display: inline-block;
+  position: relative;
 }
 
 /* Canvas Controls */
@@ -263,13 +270,18 @@ body {
 
 .canvas-info {
   position: absolute;
-  bottom: -32px;
-  left: 0;
+  bottom: var(--spacing-lg);
+  left: var(--spacing-lg);
   font-size: 0.75rem;
   color: var(--color-text-secondary);
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
+  background: white;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
 }
 
 /* Right Panel */

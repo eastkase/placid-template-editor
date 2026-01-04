@@ -214,7 +214,8 @@ const useEditorStore = create<EditorState>((set, get) => ({
           ...state.template,
           layers: [...state.template.layers, newLayer]
         },
-        selectedLayerId: newLayer.id
+        selectedLayerId: newLayer.id,
+        hasUnsavedChanges: true
       };
     });
   },
