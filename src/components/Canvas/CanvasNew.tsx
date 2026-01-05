@@ -113,14 +113,38 @@ const Canvas: React.FC = () => {
       {/* Center Alignment Guides */}
       {showCenterGuides && (
         <>
-          <div 
-            className="alignment-guide-h" 
-            style={{ top: template.height / 2 }}
-          />
-          <div 
-            className="alignment-guide-v" 
-            style={{ left: template.width / 2 }}
-          />
+          <svg 
+            style={{ 
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              width: '100%',
+              height: '100%',
+              pointerEvents: 'none',
+              zIndex: 1000
+            }}
+          >
+            <line
+              x1="0"
+              y1={template.height / 2}
+              x2={template.width}
+              y2={template.height / 2}
+              stroke="#9333ea"
+              strokeWidth="1"
+              strokeDasharray="5,5"
+              opacity="0.6"
+            />
+            <line
+              x1={template.width / 2}
+              y1="0"
+              x2={template.width / 2}
+              y2={template.height}
+              stroke="#9333ea"
+              strokeWidth="1"
+              strokeDasharray="5,5"
+              opacity="0.6"
+            />
+          </svg>
         </>
       )}
 

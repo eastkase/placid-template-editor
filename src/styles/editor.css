@@ -66,9 +66,12 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: #9333ea;
+  background-color: #9333ea;
+  border: none;
+  box-shadow: none;
   pointer-events: none;
   z-index: 1000;
+  opacity: 0.8;
 }
 
 .alignment-guide-v {
@@ -76,9 +79,12 @@
   top: 0;
   bottom: 0;
   width: 1px;
-  background: #9333ea;
+  background-color: #9333ea;
+  border: none;
+  box-shadow: none;
   pointer-events: none;
   z-index: 1000;
+  opacity: 0.8;
 }
 
 /* Layer states */
