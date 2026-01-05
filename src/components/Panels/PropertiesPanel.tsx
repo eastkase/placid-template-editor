@@ -61,6 +61,19 @@ const PropertiesPanel: React.FC = () => {
               />
             </div>
           </div>
+          <button
+            className="btn btn-ghost mt-2"
+            style={{ width: '100%' }}
+            onClick={() => {
+              const centerX = Math.round((template.width - selectedLayer.size.width) / 2);
+              const centerY = Math.round((template.height - selectedLayer.size.height) / 2);
+              handleUpdate({ 
+                position: { x: centerX, y: centerY } 
+              });
+            }}
+          >
+            Center on Canvas
+          </button>
         </div>
 
         <div className="form-group">
@@ -182,8 +195,16 @@ const TextProperties: React.FC<{
       <label className="form-label">Font Family</label>
       <select
         className="form-select"
-        value={layer.fontFamily}
-        onChange={(e) => onUpdate({ fontFamily: e.target.value })}
+        value={layer.font?.family || layer.fontFamily || 'Arial'}
+        onChange={(e) => onUpdate({ 
+          font: { 
+            family: e.target.value,
+            size: layer.font?.size || layer.fontSize || 32,
+            weight: layer.font?.weight || layer.fontWeight || 400,
+            style: layer.font?.style || 'normal'
+          },
+          fontFamily: e.target.value 
+        })}
       >
         <option value="Inter">Inter</option>
         <option value="Arial">Arial</option>
@@ -198,8 +219,20 @@ const TextProperties: React.FC<{
       <input
         type="number"
         className="form-input"
-        value={layer.fontSize}
-        onChange={(e) => onUpdate({ fontSize: parseInt(e.target.value) || 16 })}
+        value={layer.font?.size || layer.fontSize || 32}
+        onChange={(e) => {
+          const size = parseInt(e.target.value) || 16;
+          console.log('Updating font size to:', size);
+          onUpdate({ 
+            font: { 
+              family: layer.font?.family || layer.fontFamily || 'Arial',
+              size: size,
+              weight: layer.font?.weight || layer.fontWeight || 400,
+              style: layer.font?.style || 'normal'
+            },
+            fontSize: size 
+          });
+        }}
       />
     </div>
 
@@ -207,8 +240,16 @@ const TextProperties: React.FC<{
       <label className="form-label">Font Weight</label>
       <select
         className="form-select"
-        value={layer.fontWeight || 'normal'}
-        onChange={(e) => onUpdate({ fontWeight: e.target.value as any })}
+        value={layer.font?.weight || layer.fontWeight || 'normal'}
+        onChange={(e) => onUpdate({ 
+          font: { 
+            family: layer.font?.family || layer.fontFamily || 'Arial',
+            size: layer.font?.size || layer.fontSize || 32,
+            weight: e.target.value,
+            style: layer.font?.style || 'normal'
+          },
+          fontWeight: e.target.value 
+        })}
       >
         <option value="normal">Normal</option>
         <option value="bold">Bold</option>
@@ -268,11 +309,15 @@ const TextProperties: React.FC<{
         <input
           type="checkbox"
           className="toggle-switch-input"
-          checked={layer.textBox?.autoShrink || false}
+          checked={layer.textBox?.enabled && layer.textBox?.overflow === 'shrink'}
           onChange={(e) => onUpdate({ 
             textBox: { 
               ...layer.textBox, 
-              autoShrink: e.target.checked 
+              enabled: e.target.checked,
+              overflow: e.target.checked ? 'shrink' : 'wrap',
+              maxWidth: layer.size.width,
+              maxHeight: layer.size.height,
+              maxFontSize: 200
             } 
           })}
         />

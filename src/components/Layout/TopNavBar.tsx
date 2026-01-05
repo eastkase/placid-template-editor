@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Edit2, 
   Download, 
+  Upload,
+  Plus,
   Undo, 
   Redo, 
   Clock,
@@ -37,7 +39,8 @@ const TopNavBar: React.FC = () => {
     redo,
     canUndo,
     canRedo,
-    updateTemplate
+    updateTemplate,
+    loadTemplate
   } = useEditorStore();
   
   const [isEditingName, setIsEditingName] = useState(false);
@@ -71,6 +74,52 @@ const TopNavBar: React.FC = () => {
     const height = parseInt(customHeight) || 1080;
     updateTemplate({ width, height });
     setShowSizeDropdown(false);
+  };
+
+  const handleLoadTemplate = () => {
+    const savedTemplates = localStorage.getItem('savedTemplates');
+    if (savedTemplates) {
+      const templates = JSON.parse(savedTemplates);
+      const templateKeys = Object.keys(templates);
+      
+      if (templateKeys.length === 0) {
+        alert('No saved templates found');
+        return;
+      }
+      
+      // For simplicity, load the most recently saved template
+      // In a real app, you'd show a modal to select which template to load
+      const mostRecent = templateKeys[templateKeys.length - 1];
+      const templateToLoad = templates[mostRecent];
+      
+      if (templateToLoad) {
+        loadTemplate(templateToLoad);
+        alert(`Loaded template: ${templateToLoad.name}`);
+      }
+    } else {
+      alert('No saved templates found');
+    }
+  };
+
+  const handleNewTemplate = () => {
+    if (hasUnsavedChanges) {
+      if (!confirm('You have unsaved changes. Create a new template anyway?')) {
+        return;
+      }
+    }
+    
+    // Create a fresh template
+    const newTemplate = {
+      name: 'Untitled Template',
+      width: 1080,
+      height: 1080,
+      backgroundColor: '#ffffff',
+      layers: [],
+      outputFormat: 'png' as const
+    };
+    
+    loadTemplate(newTemplate);
+    setTemplateName('Untitled Template');
   };
 
   // Close dropdown when clicking outside
@@ -234,17 +283,23 @@ const TopNavBar: React.FC = () => {
 
           {/* Main Action Buttons */}
           <div className="flex items-center gap-2 ml-4">
-            <button className="btn btn-ghost text-white/90 hover:bg-white/10">
-              <Clock size={16} />
-              History
+            <button 
+              onClick={handleNewTemplate}
+              className="btn btn-secondary bg-white/10 text-white border-white/20 hover:bg-white/20"
+            >
+              <Plus size={16} />
+              New
             </button>
-            <button className="btn btn-secondary bg-white/10 text-white border-white/20 hover:bg-white/20">
-              <Play size={16} />
-              Test
+            <button
+              onClick={handleLoadTemplate}
+              className="btn btn-secondary bg-white/10 text-white border-white/20 hover:bg-white/20"
+            >
+              <Upload size={16} />
+              Load
             </button>
             <button
               onClick={() => setShowLibraryModal(true)}
-              className="btn btn-primary bg-white text-purple-900 hover:bg-purple-100"
+              className="btn btn-primary bg-purple-600 text-white hover:bg-purple-700"
             >
               <Save size={16} />
               Save

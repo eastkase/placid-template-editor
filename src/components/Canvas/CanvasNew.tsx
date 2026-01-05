@@ -198,7 +198,7 @@ const LayerRenderer: React.FC<LayerRendererProps> = ({
           }}
           className="w-full h-full resize-none outline-none p-2"
           style={{
-            fontSize: layer.font?.size || layer.fontSize || 32,
+            fontSize: `${layer.font?.size || layer.fontSize || 32}px`,
             fontFamily: layer.font?.family || layer.fontFamily || 'Arial',
             fontWeight: layer.font?.weight || layer.fontWeight || 'normal',
             textAlign: layer.alignment || layer.textAlign || 'left',

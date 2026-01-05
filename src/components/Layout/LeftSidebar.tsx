@@ -88,7 +88,10 @@ const LeftSidebar: React.FC = () => {
       id: 'layers', 
       icon: Layers, 
       label: 'Layers',
-      action: () => {}
+      action: () => {
+        // Layers panel is always visible in the right sidebar
+        alert('Layers panel is visible in the right sidebar');
+      }
     },
     { 
       id: 'grid', 
@@ -101,7 +104,9 @@ const LeftSidebar: React.FC = () => {
       id: 'settings', 
       icon: Settings, 
       label: 'Settings',
-      action: () => {}
+      action: () => {
+        alert('Settings panel coming soon!');
+      }
     },
   ];
 

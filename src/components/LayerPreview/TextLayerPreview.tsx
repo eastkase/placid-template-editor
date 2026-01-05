@@ -7,14 +7,34 @@ interface Props {
 
 const TextLayerPreview: React.FC<Props> = ({ layer }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [computedFontSize, setComputedFontSize] = useState(layer.font.size);
+  const fontSize = layer.font?.size || layer.fontSize || 32;
+  const fontFamily = layer.font?.family || layer.fontFamily || 'Arial';
+  const fontWeight = layer.font?.weight || layer.fontWeight || 'normal';
+  const fontStyle = layer.font?.style || 'normal';
+  const [computedFontSize, setComputedFontSize] = useState(fontSize);
+  
+  console.log('TextLayerPreview render:', {
+    layerId: layer.id,
+    'layer.font': layer.font,
+    'layer.fontSize': layer.fontSize,
+    'computed fontSize': fontSize,
+    'computedFontSize state': computedFontSize
+  });
+  
+  // Update computedFontSize when fontSize prop changes
+  useEffect(() => {
+    console.log('Setting computedFontSize to:', fontSize);
+    setComputedFontSize(fontSize);
+  }, [fontSize]);
 
   // Simulate text fitting algorithm to match API behavior
   useEffect(() => {
-    if (!layer.textBox?.enabled || !containerRef.current) {
-      setComputedFontSize(layer.font.size);
+    // Only calculate if auto-shrink is enabled
+    if (!layer.textBox?.enabled || layer.textBox?.overflow !== 'shrink' || !containerRef.current) {
+      // Don't override, let the other useEffect handle it
       return;
     }
+    console.log('Running shrink calculation');
 
     const container = containerRef.current;
     const padding = layer.textBox.padding || { top: 0, right: 0, bottom: 0, left: 0 };
@@ -22,14 +42,9 @@ const TextLayerPreview: React.FC<Props> = ({ layer }) => {
     const maxHeight = layer.textBox.maxHeight - padding.top - padding.bottom;
     const minSize = layer.textBox.minFontSize || 12;
 
-    if (layer.textBox.overflow !== 'shrink') {
-      setComputedFontSize(layer.font.size);
-      return;
-    }
-
     // Binary search for optimal font size
     let low = minSize;
-    let high = layer.font.size;
+    let high = fontSize;
     let optimalSize = minSize;
 
     // Create temp element for measurement
@@ -37,9 +52,9 @@ const TextLayerPreview: React.FC<Props> = ({ layer }) => {
     temp.style.cssText = `
       position: absolute;
       visibility: hidden;
-      font-family: "${layer.font.family}";
-      font-weight: ${layer.font.weight || 400};
-      font-style: ${layer.font.style || 'normal'};
+      font-family: "${fontFamily}";
+      font-weight: ${fontWeight || 400};
+      font-style: ${fontStyle || 'normal'};
       line-height: ${layer.lineHeight || 1.2};
       letter-spacing: ${layer.letterSpacing || 0}px;
       white-space: pre-wrap;
@@ -64,7 +79,7 @@ const TextLayerPreview: React.FC<Props> = ({ layer }) => {
 
     document.body.removeChild(temp);
     setComputedFontSize(optimalSize);
-  }, [layer]);
+  }, [layer.textBox?.enabled, layer.textBox?.overflow, layer.text, fontSize, fontFamily, fontWeight, fontStyle, layer.lineHeight, layer.letterSpacing, layer.textTransform]);
 
   // Parse alternate styling
   const renderText = () => {
@@ -88,9 +103,9 @@ const TextLayerPreview: React.FC<Props> = ({ layer }) => {
         <span
           key={match.index}
           style={{
-            fontFamily: layer.alternateStyle?.font?.family || layer.font.family,
+            fontFamily: layer.alternateStyle?.font?.family || fontFamily,
             fontSize: layer.alternateStyle?.font?.size || computedFontSize,
-            fontWeight: layer.alternateStyle?.font?.weight || layer.font.weight,
+            fontWeight: layer.alternateStyle?.font?.weight || fontWeight,
             color: layer.alternateStyle?.color || layer.color
           }}
         >
@@ -129,12 +144,10 @@ const TextLayerPreview: React.FC<Props> = ({ layer }) => {
     >
       <div
         style={{
-          fontFamily: `"${layer.font.family}", sans-serif`,
-          fontSize: layer.textBox?.enabled && layer.textBox.overflow === 'shrink' 
-            ? computedFontSize 
-            : layer.font.size,
-          fontWeight: layer.font.weight || 400,
-          fontStyle: layer.font.style || 'normal',
+          fontFamily: `"${fontFamily}", sans-serif`,
+          fontSize: `${computedFontSize}px`,
+          fontWeight: fontWeight || 400,
+          fontStyle: fontStyle || 'normal',
           color: layer.color,
           textAlign: layer.alignment,
           lineHeight: layer.lineHeight || 1.2,

@@ -90,15 +90,14 @@
 /* React RND Resize Handles */
 .react-resizable-handle {
   position: absolute;
-  width: 10px;
-  height: 10px;
-  background: #9333ea;
-  border: 2px solid #fff;
-  border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  width: 8px;
+  height: 8px;
+  background: white;
+  border: 1px solid #9333ea;
+  border-radius: 2px;
   z-index: 100;
   opacity: 0;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.2s ease;
 }
 
 .layer-wrapper.selected .react-resizable-handle {
@@ -106,8 +105,8 @@
 }
 
 .react-resizable-handle:hover {
-  transform: scale(1.2);
-  background: #7c3aed;
+  background: #f3e8ff;
+  border-color: #7c3aed;
 }
 
 /* Handle positions */
