@@ -4,6 +4,13 @@ export interface Template {
   width: number;
   height: number;
   backgroundColor?: string;
+  backgroundGradient?: {
+    type: 'linear' | 'radial';
+    colors: { offset: number; color: string; opacity?: number }[];
+    angle?: number; // for linear gradient
+    centerX?: number; // for radial gradient (0-1)
+    centerY?: number; // for radial gradient (0-1)
+  };
   layers: Layer[];
   outputFormat: 'png' | 'jpg' | 'webp' | 'mp4' | 'gif';
   fps?: number;
@@ -115,8 +122,10 @@ export interface ShapeLayer extends BaseLayer {
   borderRadius?: number;
   gradient?: {
     type: 'linear' | 'radial';
-    colors: { offset: number; color: string }[];
-    angle?: number;
+    colors: { offset: number; color: string; opacity?: number }[];
+    angle?: number; // for linear gradient (degrees)
+    centerX?: number; // for radial gradient (0-1)
+    centerY?: number; // for radial gradient (0-1)
   };
   points?: { x: number; y: number }[];
 }

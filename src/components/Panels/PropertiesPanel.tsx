@@ -1,17 +1,21 @@
 import React from 'react';
 import useEditorStore from '../../store/editor';
 import type { TextLayer, ImageLayer, ShapeLayer } from '../../types';
+import GradientEditor from '../Controls/GradientEditor';
+import BackgroundEditor from '../Controls/BackgroundEditor';
 
 const PropertiesPanel: React.FC = () => {
-  const { selectedLayerId, template, updateLayer } = useEditorStore();
+  const { selectedLayerId, template, updateLayer, updateTemplate } = useEditorStore();
   
   const selectedLayer = template.layers.find(layer => layer.id === selectedLayerId);
   
   if (!selectedLayer) {
     return (
-      <div className="empty-state">
-        <p className="text-center text-gray-500">Select a layer to edit properties</p>
-      </div>
+      <BackgroundEditor
+        backgroundColor={template.backgroundColor}
+        backgroundGradient={template.backgroundGradient}
+        onUpdate={updateTemplate}
+      />
     );
   }
 
@@ -222,7 +226,6 @@ const TextProperties: React.FC<{
         value={layer.font?.size || layer.fontSize || 32}
         onChange={(e) => {
           const size = parseInt(e.target.value) || 16;
-          console.log('Updating font size to:', size);
           onUpdate({ 
             font: { 
               family: layer.font?.family || layer.fontFamily || 'Arial',
@@ -384,28 +387,38 @@ const ShapeProperties: React.FC<{
       </select>
     </div>
 
-    <div className="form-group">
-      <label className="form-label">Fill Color</label>
-      <div className="color-picker-group">
-        <div 
-          className="color-picker-swatch"
-          style={{ backgroundColor: layer.fill }}
-        >
+    {/* Gradient Editor */}
+    <GradientEditor
+      gradient={layer.gradient}
+      onChange={(gradient) => onUpdate({ gradient })}
+      label="Gradient Fill"
+    />
+
+    {/* Solid Fill Color (shown when gradient is disabled) */}
+    {!layer.gradient && (
+      <div className="form-group">
+        <label className="form-label">Fill Color</label>
+        <div className="color-picker-group">
+          <div 
+            className="color-picker-swatch"
+            style={{ backgroundColor: layer.fill }}
+          >
+            <input
+              type="color"
+              value={layer.fill || '#7c3aed'}
+              onChange={(e) => onUpdate({ fill: e.target.value })}
+              style={{ opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+            />
+          </div>
           <input
-            type="color"
-            value={layer.fill}
+            type="text"
+            className="form-input color-picker-input"
+            value={layer.fill || '#7c3aed'}
             onChange={(e) => onUpdate({ fill: e.target.value })}
-            style={{ opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
           />
         </div>
-        <input
-          type="text"
-          className="form-input color-picker-input"
-          value={layer.fill}
-          onChange={(e) => onUpdate({ fill: e.target.value })}
-        />
       </div>
-    </div>
+    )}
 
     {layer.shape === 'rectangle' && (
       <div className="form-group">

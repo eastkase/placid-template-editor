@@ -175,13 +175,11 @@ const useEditorStore = create<EditorState>((set, get) => ({
   },
   
   updateLayer: (layerId, updates) => {
-    console.log('updateLayer called:', { layerId, updates });
     set(state => {
       const newLayers = state.template.layers.map(layer =>
         layer.id === layerId ? { ...layer, ...updates } as Layer : layer
       );
       const newTemplate = { ...state.template, layers: newLayers };
-      console.log('Updated layer:', newLayers.find(l => l.id === layerId));
       
       // Add to history
       const newHistory = [

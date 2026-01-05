@@ -13,17 +13,8 @@ const TextLayerPreview: React.FC<Props> = ({ layer }) => {
   const fontStyle = layer.font?.style || 'normal';
   const [computedFontSize, setComputedFontSize] = useState(fontSize);
   
-  console.log('TextLayerPreview render:', {
-    layerId: layer.id,
-    'layer.font': layer.font,
-    'layer.fontSize': layer.fontSize,
-    'computed fontSize': fontSize,
-    'computedFontSize state': computedFontSize
-  });
-  
   // Update computedFontSize when fontSize prop changes
   useEffect(() => {
-    console.log('Setting computedFontSize to:', fontSize);
     setComputedFontSize(fontSize);
   }, [fontSize]);
 
@@ -34,7 +25,6 @@ const TextLayerPreview: React.FC<Props> = ({ layer }) => {
       // Don't override, let the other useEffect handle it
       return;
     }
-    console.log('Running shrink calculation');
 
     const container = containerRef.current;
     const padding = layer.textBox.padding || { top: 0, right: 0, bottom: 0, left: 0 };

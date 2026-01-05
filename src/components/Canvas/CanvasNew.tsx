@@ -63,6 +63,33 @@ const Canvas: React.FC = () => {
     }
   };
 
+  // Helper function to render gradient background
+  const renderBackground = () => {
+    if (template.backgroundGradient) {
+      const { type, colors, angle = 90, centerX = 0.5, centerY = 0.5 } = template.backgroundGradient;
+      
+      const hexToRgba = (hex: string, opacity: number = 1): string => {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+      };
+      
+      const colorStops = colors
+        .map(c => `${hexToRgba(c.color, c.opacity || 1)} ${c.offset * 100}%`)
+        .join(', ');
+      
+      if (type === 'linear') {
+        return `linear-gradient(${angle}deg, ${colorStops})`;
+      } else {
+        const cx = centerX * 100;
+        const cy = centerY * 100;
+        return `radial-gradient(circle at ${cx}% ${cy}%, ${colorStops})`;
+      }
+    }
+    return template.backgroundColor || '#ffffff';
+  };
+
   // Sort layers by z-index for rendering
   const sortedLayers = [...layers].sort((a, b) => a.zIndex - b.zIndex);
 
@@ -73,7 +100,7 @@ const Canvas: React.FC = () => {
       style={{
         width: template.width,
         height: template.height,
-        backgroundColor: template.backgroundColor || '#ffffff',
+        background: renderBackground(),
         position: 'relative'
       }}
       onClick={handleBackgroundClick}
