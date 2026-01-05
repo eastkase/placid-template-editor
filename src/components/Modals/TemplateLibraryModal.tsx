@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import useEditorStore from '../../store/editor';
-import { templateAPI } from '../../services/api';
 import { Template } from '../../types';
 import { 
   X, 
@@ -28,47 +27,62 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
     setHasUnsavedChanges 
   } = useEditorStore();
   
-  const [templates, setTemplates] = useState<Template[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [templates, setTemplates] = useState<{[key: string]: Template}>({});
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
+  const [currentTemplateKey, setCurrentTemplateKey] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTemplates();
   }, []);
 
-  const fetchTemplates = async () => {
+  const fetchTemplates = () => {
     try {
-      setLoading(true);
-      const data = await templateAPI.listTemplates();
-      setTemplates(data);
+      const savedTemplates = localStorage.getItem('savedTemplates');
+      if (savedTemplates) {
+        const templatesData = JSON.parse(savedTemplates);
+        setTemplates(templatesData);
+        
+        // Find if current template matches any saved template
+        const currentKey = Object.keys(templatesData).find(key => 
+          templatesData[key].name === template.name
+        );
+        if (currentKey) {
+          setCurrentTemplateKey(currentKey);
+        }
+      }
     } catch (err) {
       setError('Failed to load templates');
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     try {
       setSaving(true);
       
-      if (savedTemplateId) {
-        // Update existing template
-        await templateAPI.updateTemplate(savedTemplateId, template);
-      } else {
-        // Create new template
-        const created = await templateAPI.createTemplate(template);
-        if (created.id) {
-          setSavedTemplateId(created.id);
-        }
-      }
+      const key = currentTemplateKey || `template_${Date.now()}`;
       
+      // Save to localStorage
+      const savedTemplates = localStorage.getItem('savedTemplates');
+      const templatesData = savedTemplates ? JSON.parse(savedTemplates) : {};
+      
+      templatesData[key] = {
+        ...template,
+        updatedAt: new Date().toISOString()
+      };
+      
+      localStorage.setItem('savedTemplates', JSON.stringify(templatesData));
+      
+      setCurrentTemplateKey(key);
       setHasUnsavedChanges(false);
-      await fetchTemplates();
+      fetchTemplates();
+      
+      // Show success message
+      alert(`Template "${template.name}" saved successfully!`);
     } catch (err) {
       setError('Failed to save template');
       console.error(err);
@@ -77,21 +91,30 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
     }
   };
 
-  const handleSaveAs = async () => {
+  const handleSaveAs = () => {
     const name = prompt('Enter name for new template:', `${template.name} (copy)`);
     if (!name) return;
 
     try {
       setSaving(true);
-      const created = await templateAPI.createTemplate({
+      
+      const key = `template_${Date.now()}`;
+      const savedTemplates = localStorage.getItem('savedTemplates');
+      const templatesData = savedTemplates ? JSON.parse(savedTemplates) : {};
+      
+      templatesData[key] = {
         ...template,
-        name
-      });
-      if (created.id) {
-        setSavedTemplateId(created.id);
-      }
+        name,
+        updatedAt: new Date().toISOString()
+      };
+      
+      localStorage.setItem('savedTemplates', JSON.stringify(templatesData));
+      
+      setCurrentTemplateKey(key);
       setHasUnsavedChanges(false);
-      await fetchTemplates();
+      fetchTemplates();
+      
+      alert(`Template saved as "${name}"!`);
     } catch (err) {
       setError('Failed to save template');
       console.error(err);
@@ -100,7 +123,7 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
     }
   };
 
-  const handleLoad = async (templateToLoad: Template) => {
+  const handleLoad = (templateKey: string, templateToLoad: Template) => {
     if (hasUnsavedChanges) {
       if (!confirm('You have unsaved changes. Do you want to discard them?')) {
         return;
@@ -108,45 +131,74 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
     }
 
     loadTemplate(templateToLoad);
-    if (templateToLoad.id) {
-      setSavedTemplateId(templateToLoad.id);
-    }
+    setCurrentTemplateKey(templateKey);
+    setHasUnsavedChanges(false);
     onClose();
   };
 
-  const handleDelete = async (id: string | undefined) => {
-    if (!id || !confirm('Are you sure you want to delete this template?')) return;
+  const handleDelete = (templateKey: string) => {
+    if (!confirm('Are you sure you want to delete this template?')) return;
 
     try {
-      await templateAPI.deleteTemplate(id);
-      if (savedTemplateId === id) {
-        setSavedTemplateId(null);
+      const savedTemplates = localStorage.getItem('savedTemplates');
+      if (savedTemplates) {
+        const templatesData = JSON.parse(savedTemplates);
+        delete templatesData[templateKey];
+        localStorage.setItem('savedTemplates', JSON.stringify(templatesData));
+        
+        if (currentTemplateKey === templateKey) {
+          setCurrentTemplateKey(null);
+        }
+        
+        fetchTemplates();
       }
-      await fetchTemplates();
     } catch (err) {
       setError('Failed to delete template');
       console.error(err);
     }
   };
 
-  const handleDuplicate = async (id: string | undefined) => {
-    if (!id) return;
+  const handleDuplicate = (templateKey: string) => {
     try {
-      await templateAPI.duplicateTemplate(id);
-      await fetchTemplates();
+      const savedTemplates = localStorage.getItem('savedTemplates');
+      if (savedTemplates) {
+        const templatesData = JSON.parse(savedTemplates);
+        const templateToDuplicate = templatesData[templateKey];
+        
+        if (templateToDuplicate) {
+          const newKey = `template_${Date.now()}`;
+          templatesData[newKey] = {
+            ...templateToDuplicate,
+            name: `${templateToDuplicate.name} (copy)`,
+            updatedAt: new Date().toISOString()
+          };
+          
+          localStorage.setItem('savedTemplates', JSON.stringify(templatesData));
+          fetchTemplates();
+        }
+      }
     } catch (err) {
       setError('Failed to duplicate template');
       console.error(err);
     }
   };
 
-  const handleRename = async (id: string | undefined) => {
-    if (!id || !editingName.trim()) return;
+  const handleRename = (templateKey: string) => {
+    if (!editingName.trim()) return;
 
     try {
-      await templateAPI.updateTemplate(id, { name: editingName });
-      await fetchTemplates();
-      setEditingId(null);
+      const savedTemplates = localStorage.getItem('savedTemplates');
+      if (savedTemplates) {
+        const templatesData = JSON.parse(savedTemplates);
+        if (templatesData[templateKey]) {
+          templatesData[templateKey].name = editingName;
+          templatesData[templateKey].updatedAt = new Date().toISOString();
+          
+          localStorage.setItem('savedTemplates', JSON.stringify(templatesData));
+          fetchTemplates();
+          setEditingId(null);
+        }
+      }
     } catch (err) {
       setError('Failed to rename template');
       console.error(err);
@@ -184,9 +236,9 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
                 className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                {savedTemplateId ? 'Save' : 'Save New'}
+                {currentTemplateKey ? 'Update' : 'Save New'}
               </button>
-              {savedTemplateId && (
+              {currentTemplateKey && (
                 <button
                   onClick={handleSaveAs}
                   disabled={saving}
@@ -208,7 +260,7 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
             </div>
           ) : error ? (
             <div className="text-center text-red-600 py-4">{error}</div>
-          ) : templates.length === 0 ? (
+          ) : Object.keys(templates).length === 0 ? (
             <div className="text-center text-gray-500 py-8">
               <p>No saved templates yet</p>
               <button
@@ -221,29 +273,29 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4">
-              {templates.map((tmpl) => (
+              {Object.entries(templates).map(([key, tmpl]) => (
                 <div
-                  key={tmpl.id || `template-${Math.random()}`}
+                  key={key}
                   className={`border rounded-lg p-4 hover:shadow-md transition-shadow ${
-                    savedTemplateId === tmpl.id ? 'border-purple-500 bg-purple-50' : 'border-gray-200'
+                    currentTemplateKey === key ? 'border-purple-500 bg-purple-50' : 'border-gray-200'
                   }`}
                 >
                   <div className="flex items-start justify-between mb-2">
-                    {editingId === tmpl.id ? (
+                    {editingId === key ? (
                       <div className="flex items-center gap-2 flex-1">
                         <input
                           type="text"
                           value={editingName}
                           onChange={(e) => setEditingName(e.target.value)}
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleRename(tmpl.id);
+                            if (e.key === 'Enter') handleRename(key);
                             if (e.key === 'Escape') setEditingId(null);
                           }}
                           className="flex-1 px-2 py-1 border border-purple-500 rounded text-sm"
                           autoFocus
                         />
                         <button
-                          onClick={() => handleRename(tmpl.id)}
+                          onClick={() => handleRename(key)}
                           className="p-1 text-green-600 hover:bg-green-50 rounded"
                         >
                           <Check size={16} />
@@ -269,12 +321,19 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
                           )}
                         </div>
                         <div className="flex gap-1">
+                          {currentTemplateKey === key && (
+                            <button
+                              onClick={() => handleSave()}
+                              className="p-1 text-green-600 hover:bg-green-50 rounded"
+                              title="Update this template"
+                            >
+                              <Save size={16} />
+                            </button>
+                          )}
                           <button
                             onClick={() => {
-                              if (tmpl.id) {
-                                setEditingId(tmpl.id);
-                                setEditingName(tmpl.name);
-                              }
+                              setEditingId(key);
+                              setEditingName(tmpl.name);
                             }}
                             className="p-1 text-gray-600 hover:bg-gray-100 rounded"
                             title="Rename"
@@ -282,14 +341,14 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
                             <Edit2 size={16} />
                           </button>
                           <button
-                            onClick={() => handleDuplicate(tmpl.id)}
+                            onClick={() => handleDuplicate(key)}
                             className="p-1 text-gray-600 hover:bg-gray-100 rounded"
                             title="Duplicate"
                           >
                             <Copy size={16} />
                           </button>
                           <button
-                            onClick={() => handleDelete(tmpl.id)}
+                            onClick={() => handleDelete(key)}
                             className="p-1 text-red-600 hover:bg-red-50 rounded"
                             title="Delete"
                           >
@@ -301,7 +360,7 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
                   </div>
                   
                   <button
-                    onClick={() => handleLoad(tmpl)}
+                    onClick={() => handleLoad(key, tmpl)}
                     className="w-full mt-3 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded transition-colors flex items-center justify-center gap-2 text-sm"
                   >
                     <FolderOpen size={16} />
