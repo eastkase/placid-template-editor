@@ -77,28 +77,9 @@ const TopNavBar: React.FC = () => {
   };
 
   const handleLoadTemplate = () => {
-    const savedTemplates = localStorage.getItem('savedTemplates');
-    if (savedTemplates) {
-      const templates = JSON.parse(savedTemplates);
-      const templateKeys = Object.keys(templates);
-      
-      if (templateKeys.length === 0) {
-        alert('No saved templates found');
-        return;
-      }
-      
-      // For simplicity, load the most recently saved template
-      // In a real app, you'd show a modal to select which template to load
-      const mostRecent = templateKeys[templateKeys.length - 1];
-      const templateToLoad = templates[mostRecent];
-      
-      if (templateToLoad) {
-        loadTemplate(templateToLoad);
-        alert(`Loaded template: ${templateToLoad.name}`);
-      }
-    } else {
-      alert('No saved templates found');
-    }
+    // Just open the template library modal
+    // The user can select which template to load from there
+    setShowLibraryModal(true);
   };
 
   const handleNewTemplate = () => {
