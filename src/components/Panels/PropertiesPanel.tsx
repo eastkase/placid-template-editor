@@ -4,6 +4,7 @@ import type { TextLayer, ImageLayer, ShapeLayer } from '../../types';
 import GradientEditor from '../Controls/GradientEditor';
 import BackgroundEditor from '../Controls/BackgroundEditor';
 import AnimationControls from '../Controls/AnimationControls';
+import AnimatedTextPreview from '../LayerPreview/AnimatedTextPreview';
 
 const PropertiesPanel: React.FC = () => {
   const { selectedLayerId, template, updateLayer, updateTemplate } = useEditorStore();
@@ -184,9 +185,28 @@ const TextProperties: React.FC<{
   onUpdate: (updates: Partial<TextLayer>) => void;
 }> = ({ layer, onUpdate }) => {
   const [previewKey, setPreviewKey] = useState(0);
+  const [isPreviewingAnimation, setIsPreviewingAnimation] = useState(false);
   
   const handlePreviewAnimation = () => {
     setPreviewKey(prev => prev + 1);
+    setIsPreviewingAnimation(true);
+    
+    // Calculate animation duration
+    if (layer.animation) {
+      let duration = 0;
+      if (layer.animation.typewriter) {
+        duration = (layer.animation.typewriter.duration + layer.animation.typewriter.startDelay) * 1000;
+      } else if (layer.animation.fade) {
+        duration = (layer.animation.fade.duration + layer.animation.fade.startDelay) * 1000;
+      } else if (layer.animation.slide) {
+        duration = (layer.animation.slide.duration + layer.animation.slide.startDelay) * 1000;
+      }
+      
+      // Stop animation after duration
+      setTimeout(() => {
+        setIsPreviewingAnimation(false);
+      }, duration + 500);
+    }
   };
   
   return (
@@ -347,6 +367,26 @@ const TextProperties: React.FC<{
       onUpdate={onUpdate}
       onPreview={handlePreviewAnimation}
     />
+    
+    {/* Animation Preview */}
+    {isPreviewingAnimation && layer.animation && layer.animation.type !== 'none' && (
+      <div className="mt-4 p-4 bg-gray-900 rounded-lg">
+        <div className="text-xs text-gray-400 mb-2">Animation Preview:</div>
+        <div style={{
+          minHeight: '60px',
+          display: 'flex',
+          alignItems: 'center',
+          color: 'white'
+        }}>
+          <AnimatedTextPreview
+            key={previewKey}
+            layer={layer}
+            isPlaying={true}
+            onAnimationEnd={() => setIsPreviewingAnimation(false)}
+          />
+        </div>
+      </div>
+    )}
   </div>
   </>
   );
