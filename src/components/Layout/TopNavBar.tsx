@@ -10,11 +10,14 @@ import {
   Play,
   Save,
   ChevronDown,
-  Maximize2
+  Maximize2,
+  FileDown,
+  FileUp
 } from 'lucide-react';
 import useEditorStore from '../../store/editor';
 import ExportModal from '../Modals/ExportModal';
 import TemplateLibraryModal from '../Modals/TemplateLibraryModal';
+import BackupModal from '../Modals/BackupModal';
 
 const TEMPLATE_PRESETS = [
   { name: 'Custom', width: 0, height: 0 },
@@ -47,6 +50,7 @@ const TopNavBar: React.FC = () => {
   const [templateName, setTemplateName] = useState(template.name);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showLibraryModal, setShowLibraryModal] = useState(false);
+  const [showBackupModal, setShowBackupModal] = useState(false);
   const [showSizeDropdown, setShowSizeDropdown] = useState(false);
   const [customWidth, setCustomWidth] = useState(template.width.toString());
   const [customHeight, setCustomHeight] = useState(template.height.toString());
@@ -101,6 +105,44 @@ const TopNavBar: React.FC = () => {
     
     loadTemplate(newTemplate);
     setTemplateName('Untitled Template');
+  };
+
+  const handleExportJSON = () => {
+    const dataStr = JSON.stringify(template, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = `${template.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  };
+
+  const handleImportJSON = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    
+    input.onchange = (e: any) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        try {
+          const importedTemplate = JSON.parse(e.target.result);
+          loadTemplate(importedTemplate);
+          alert(`Template "${importedTemplate.name}" imported successfully!`);
+        } catch (error) {
+          alert('Failed to import template. Please check the file format.');
+          console.error(error);
+        }
+      };
+      reader.readAsText(file);
+    };
+    
+    input.click();
   };
 
   // Close dropdown when clicking outside
@@ -237,9 +279,24 @@ const TopNavBar: React.FC = () => {
           {/* Action Icons */}
           <div className="flex items-center gap-1">
             <button
+              onClick={handleExportJSON}
+              className="btn-icon btn-ghost text-white/80 hover:text-white hover:bg-white/10"
+              title="Export Template as JSON"
+            >
+              <FileDown size={18} />
+            </button>
+            <button
+              onClick={handleImportJSON}
+              className="btn-icon btn-ghost text-white/80 hover:text-white hover:bg-white/10"
+              title="Import Template from JSON"
+            >
+              <FileUp size={18} />
+            </button>
+            <div className="w-px h-6 bg-white/20 mx-1" />
+            <button
               onClick={() => setShowExportModal(true)}
               className="btn-icon btn-ghost text-white/80 hover:text-white hover:bg-white/10"
-              title="Export"
+              title="Export Image"
             >
               <Download size={18} />
             </button>
@@ -264,6 +321,13 @@ const TopNavBar: React.FC = () => {
 
           {/* Main Action Buttons */}
           <div className="flex items-center gap-2 ml-4">
+            <button
+              onClick={() => setShowBackupModal(true)}
+              className="btn btn-ghost text-yellow-300 hover:bg-white/10 border border-yellow-300/50"
+              title="Backup all templates"
+            >
+              Backup
+            </button>
             <button 
               onClick={handleNewTemplate}
               className="btn btn-secondary bg-white/10 text-white border-white/20 hover:bg-white/20"
@@ -295,6 +359,9 @@ const TopNavBar: React.FC = () => {
       )}
       {showLibraryModal && (
         <TemplateLibraryModal onClose={() => setShowLibraryModal(false)} />
+      )}
+      {showBackupModal && (
+        <BackupModal onClose={() => setShowBackupModal(false)} />
       )}
     </>
   );
