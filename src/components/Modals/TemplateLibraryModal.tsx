@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import useEditorStore from '../../store/editor';
 import { Template } from '../../types';
-import { localStorageService } from '../../services/localStorage';
+import { templateService } from '../../services/templateService';
 import { 
   X, 
   Save, 

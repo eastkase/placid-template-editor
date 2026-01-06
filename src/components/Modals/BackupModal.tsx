@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, Download, Upload, AlertCircle } from 'lucide-react';
-import { localStorageService } from '../../services/localStorage';
+import { templateService } from '../../services/templateService';
 
 interface Props {
   onClose: () => void;
@@ -9,7 +9,7 @@ interface Props {
 const BackupModal: React.FC<Props> = ({ onClose }) => {
   const handleExportAll = async () => {
     try {
-      const templates = await localStorageService.listTemplates();
+      const templates = await templateService.listTemplates();
       const backup = {
         version: '1.0',
         exportDate: new Date().toISOString(),
@@ -54,7 +54,7 @@ const BackupModal: React.FC<Props> = ({ onClose }) => {
           
           // Import each template
           for (const template of backup.templates) {
-            await localStorageService.createTemplate(template);
+            await templateService.createTemplate(template);
           }
           
           alert(`Imported ${backup.templates.length} templates successfully!`);

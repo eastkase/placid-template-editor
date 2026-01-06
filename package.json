@@ -5,9 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:server": "cd server && npm run dev",
     "build": "tsc -b && vite build",
+    "build:server": "cd server && npm install",
+    "start": "cd server && npm start",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "install:all": "npm install && cd server && npm install"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
