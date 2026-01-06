@@ -16,6 +16,10 @@ interface EditorState {
   snapToGrid: boolean;
   gridSize: number;
   
+  // Animation state
+  isAnimating: boolean;
+  animationKey: number;
+  
   // History for undo/redo
   history: Template[];
   historyIndex: number;
@@ -50,6 +54,9 @@ interface EditorState {
   // Export/Import
   exportJSON: () => string;
   importJSON: (json: string) => void;
+  
+  // Animation actions
+  setAnimationState: (isAnimating: boolean, animationKey?: number) => void;
 }
 
 function createDefaultTemplate(): Template {
@@ -143,6 +150,8 @@ const useEditorStore = create<EditorState>((set, get) => ({
   gridSize: 10,
   history: [],
   historyIndex: -1,
+  isAnimating: false,
+  animationKey: 0,
   
   
   setTemplate: (template) => {
@@ -364,6 +373,13 @@ const useEditorStore = create<EditorState>((set, get) => ({
     } catch (error) {
       console.error('Failed to import JSON:', error);
     }
+  },
+  
+  setAnimationState: (isAnimating, animationKey) => {
+    set(state => ({
+      isAnimating,
+      animationKey: animationKey !== undefined ? animationKey : state.animationKey + 1
+    }));
   }
 }));
 

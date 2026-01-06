@@ -13,6 +13,8 @@ import {
   Download,
   Upload,
   Play,
+  Pause,
+  RotateCcw,
   Settings,
   Save,
   FolderOpen
@@ -41,7 +43,9 @@ const Toolbar: React.FC = () => {
     toggleGrid,
     snapToGrid,
     toggleSnap,
-    updateTemplate
+    updateTemplate,
+    isAnimating,
+    setAnimationState
   } = useEditorStore();
 
   const [showExportModal, setShowExportModal] = useState(false);
@@ -77,6 +81,46 @@ const Toolbar: React.FC = () => {
   const handleSaveName = () => {
     updateTemplate({ name: templateName });
     setIsEditingName(false);
+  };
+  
+  const handlePlayAnimations = () => {
+    setAnimationState(true);
+    
+    // Calculate max animation duration
+    const animatedLayers = template.layers.filter(l => 
+      l.type === 'text' && l.animation && l.animation.type !== 'none'
+    );
+    
+    if (animatedLayers.length === 0) {
+      setAnimationState(false);
+      return;
+    }
+    
+    let maxDuration = 0;
+    animatedLayers.forEach(layer => {
+      if (layer.type === 'text' && layer.animation) {
+        const anim = layer.animation;
+        if (anim.typewriter) {
+          maxDuration = Math.max(maxDuration, 
+            (anim.typewriter.duration + anim.typewriter.startDelay) * 1000);
+        } else if (anim.fade) {
+          maxDuration = Math.max(maxDuration, 
+            (anim.fade.duration + anim.fade.startDelay) * 1000);
+        } else if (anim.slide) {
+          maxDuration = Math.max(maxDuration, 
+            (anim.slide.duration + anim.slide.startDelay) * 1000);
+        }
+      }
+    });
+    
+    // Auto stop after max duration + 500ms buffer
+    setTimeout(() => {
+      setAnimationState(false);
+    }, maxDuration + 500);
+  };
+  
+  const handleStopAnimations = () => {
+    setAnimationState(false);
   };
 
   return (
@@ -167,6 +211,38 @@ const Toolbar: React.FC = () => {
           </button>
         </div>
 
+        {/* Animation controls */}
+        <div className="toolbar-group border-l border-gray-200 pl-4">
+          {!isAnimating ? (
+            <button
+              onClick={handlePlayAnimations}
+              className="p-2 hover:bg-gray-100 rounded transition-colors flex items-center gap-2"
+              title="Preview animations"
+            >
+              <Play size={20} />
+              <span className="text-sm">Preview</span>
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={handleStopAnimations}
+                className="p-2 bg-red-100 text-red-600 hover:bg-red-200 rounded transition-colors flex items-center gap-2"
+                title="Stop animations"
+              >
+                <Pause size={20} />
+                <span className="text-sm">Stop</span>
+              </button>
+              <button
+                onClick={handlePlayAnimations}
+                className="p-2 hover:bg-gray-100 rounded transition-colors"
+                title="Restart animations"
+              >
+                <RotateCcw size={20} />
+              </button>
+            </>
+          )}
+        </div>
+        
         {/* Canvas controls */}
         <div className="toolbar-group border-l border-gray-200 pl-4">
           <button

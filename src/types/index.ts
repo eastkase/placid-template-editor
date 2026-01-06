@@ -109,6 +109,29 @@ export interface TextLayer extends BaseLayer {
     font?: Partial<TextLayer['font']>;
     color?: string;
   };
+  
+  animation?: {
+    type: 'none' | 'typewriter' | 'fade' | 'slide';
+    typewriter?: {
+      enabled: boolean;
+      duration: number; // seconds for full text to appear
+      startDelay: number; // seconds before animation starts
+      charDelay?: number; // milliseconds between characters
+      cursor?: boolean; // show blinking cursor
+      cursorChar?: string; // cursor character (default: |)
+    };
+    fade?: {
+      enabled: boolean;
+      duration: number; // seconds
+      startDelay: number; // seconds
+    };
+    slide?: {
+      enabled: boolean;
+      duration: number; // seconds
+      startDelay: number; // seconds
+      direction: 'left' | 'right' | 'top' | 'bottom';
+    };
+  };
 }
 
 export interface ShapeLayer extends BaseLayer {

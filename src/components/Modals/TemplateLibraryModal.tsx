@@ -43,11 +43,11 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
   const fetchTemplates = async () => {
     try {
       setLoading(true);
-      const templatesData = await localStorageService.listTemplates();
+      const templatesData = await templateService.listTemplates();
       setTemplates(templatesData);
       
       // Find if current template matches any saved template
-      const current = templatesData.find(t => t.name === template.name);
+      const current = templatesData.find((t: Template) => t.name === template.name);
       if (current?.id) {
         setCurrentTemplateId(current.id);
       }
@@ -65,10 +65,10 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
       
       if (currentTemplateId) {
         // Update existing template
-        await localStorageService.updateTemplate(currentTemplateId, template);
+        await templateService.updateTemplate(currentTemplateId, template);
       } else {
         // Create new template
-        const created = await localStorageService.createTemplate(template);
+        const created = await templateService.createTemplate(template);
         setCurrentTemplateId(created.id || null);
       }
       
@@ -92,7 +92,7 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
     try {
       setSaving(true);
       
-      const created = await localStorageService.createTemplate({
+      const created = await templateService.createTemplate({
         ...template,
         name
       });
@@ -127,7 +127,7 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
     if (!confirm('Are you sure you want to delete this template?')) return;
 
     try {
-      await localStorageService.deleteTemplate(id);
+      await templateService.deleteTemplate(id);
       
       if (currentTemplateId === id) {
         setCurrentTemplateId(null);
@@ -142,7 +142,7 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
 
   const handleDuplicate = async (id: string) => {
     try {
-      await localStorageService.duplicateTemplate(id);
+      await templateService.duplicateTemplate(id);
       await fetchTemplates();
     } catch (err) {
       setError('Failed to duplicate template');
@@ -154,7 +154,7 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
     if (!editingName.trim()) return;
 
     try {
-      await localStorageService.updateTemplate(id, { name: editingName });
+      await templateService.updateTemplate(id, { name: editingName });
       await fetchTemplates();
       setEditingId(null);
     } catch (err) {

@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import useEditorStore from '../../store/editor';
 import type { TextLayer, ImageLayer, ShapeLayer } from '../../types';
 import GradientEditor from '../Controls/GradientEditor';
 import BackgroundEditor from '../Controls/BackgroundEditor';
+import AnimationControls from '../Controls/AnimationControls';
 
 const PropertiesPanel: React.FC = () => {
   const { selectedLayerId, template, updateLayer, updateTemplate } = useEditorStore();
@@ -181,7 +182,15 @@ const PropertiesPanel: React.FC = () => {
 const TextProperties: React.FC<{
   layer: TextLayer;
   onUpdate: (updates: Partial<TextLayer>) => void;
-}> = ({ layer, onUpdate }) => (
+}> = ({ layer, onUpdate }) => {
+  const [previewKey, setPreviewKey] = useState(0);
+  
+  const handlePreviewAnimation = () => {
+    setPreviewKey(prev => prev + 1);
+  };
+  
+  return (
+  <>
   <div className="section">
     <h3 className="section-header">Text Properties</h3>
     
@@ -329,7 +338,19 @@ const TextProperties: React.FC<{
       </label>
     </div>
   </div>
-);
+  
+  <div className="section">
+    <h3 className="section-header">Animation</h3>
+    <AnimationControls
+      key={previewKey}
+      layer={layer}
+      onUpdate={onUpdate}
+      onPreview={handlePreviewAnimation}
+    />
+  </div>
+  </>
+  );
+};
 
 // Image Layer Properties
 const ImageProperties: React.FC<{

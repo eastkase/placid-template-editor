@@ -3,6 +3,7 @@ import { Rnd } from 'react-rnd';
 import useEditorStore from '../../store/editor';
 import { Layer } from '../../types';
 import TextLayerPreview from '../LayerPreview/TextLayerPreview';
+import AnimatedTextPreview from '../LayerPreview/AnimatedTextPreview';
 import ImageLayerPreview from '../LayerPreview/ImageLayerPreview';
 import ShapeLayerPreview from '../LayerPreview/ShapeLayerPreview';
 
@@ -14,7 +15,9 @@ const Canvas: React.FC = () => {
     updateLayer,
     showGrid,
     snapToGrid: shouldSnap,
-    gridSize
+    gridSize,
+    isAnimating,
+    animationKey
   } = useEditorStore();
   
   const layers = template.layers;
@@ -157,10 +160,11 @@ const Canvas: React.FC = () => {
 
         return (
           <LayerRenderer
-            key={layer.id}
+            key={`${layer.id}-${animationKey}`}
             layer={layer}
             isSelected={isSelected}
             isEditing={isEditing}
+            isAnimating={isAnimating}
             onSelect={() => {
               selectLayer(layer.id);
               setEditingLayerId(null);
@@ -191,6 +195,7 @@ interface LayerRendererProps {
   layer: Layer;
   isSelected: boolean;
   isEditing: boolean;
+  isAnimating?: boolean;
   onSelect: () => void;
   onDoubleClick: () => void;
   onUpdate: (updates: Partial<Layer>) => void;
@@ -206,6 +211,7 @@ const LayerRenderer: React.FC<LayerRendererProps> = ({
   layer, 
   isSelected, 
   isEditing, 
+  isAnimating = false,
   onSelect, 
   onDoubleClick, 
   onUpdate, 
@@ -267,6 +273,9 @@ const LayerRenderer: React.FC<LayerRendererProps> = ({
 
     switch (layer.type) {
       case 'text':
+        if (isAnimating && layer.animation && layer.animation.type !== 'none') {
+          return <AnimatedTextPreview layer={layer} isPlaying={true} />;
+        }
         return <TextLayerPreview layer={layer} />;
       case 'image':
         return <ImageLayerPreview layer={layer} />;
