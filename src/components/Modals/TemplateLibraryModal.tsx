@@ -319,13 +319,34 @@ const TemplateLibraryModal: React.FC<Props> = ({ onClose }) => {
                     )}
                   </div>
                   
-                  <button
-                    onClick={() => handleLoad(tmpl)}
-                    className="w-full mt-3 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded transition-colors flex items-center justify-center gap-2 text-sm"
-                  >
-                    <FolderOpen size={16} />
-                    Load Template
-                  </button>
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={() => handleLoad(tmpl)}
+                      className="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded transition-colors flex items-center justify-center gap-2 text-sm"
+                    >
+                      <FolderOpen size={14} />
+                      Load
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (confirm(`Save current template as "${tmpl.name}"? This will overwrite the existing template.`)) {
+                          try {
+                            await templateService.updateTemplate(tmpl.id!, template);
+                            setCurrentTemplateId(tmpl.id || null);
+                            setHasUnsavedChanges(false);
+                            await fetchTemplates();
+                            alert(`Saved as "${tmpl.name}"!`);
+                          } catch (err) {
+                            alert('Failed to save template');
+                          }
+                        }
+                      }}
+                      className="flex-1 px-3 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded transition-colors flex items-center justify-center gap-2 text-sm"
+                    >
+                      <Save size={14} />
+                      Save Here
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

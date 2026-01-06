@@ -39,18 +39,16 @@
 
 /* Layer Wrapper */
 .layer-wrapper {
-  border: 2px solid transparent;
-  transition: border-color 0.2s ease;
   position: absolute !important;
+  border: none;
 }
 
 .layer-wrapper:hover {
-  border-color: rgba(147, 51, 234, 0.3) !important;
+  /* Hover effect handled by inner div */
 }
 
 .layer-wrapper.selected {
-  border-color: #9333ea !important;
-  box-shadow: 0 0 0 1px rgba(147, 51, 234, 0.2);
+  /* Selection handled by inner div */
 }
 
 /* Text editing */
