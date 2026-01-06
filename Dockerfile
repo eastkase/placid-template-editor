@@ -15,20 +15,22 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Production stage - serve with nginx
-FROM nginx:alpine
+# Production stage - serve with Node.js
+FROM node:20-alpine
 
-# Copy built files to nginx
-COPY --from=builder /app/dist /usr/share/nginx/html
+WORKDIR /app
 
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Install serve package globally
+RUN npm install -g serve
 
-# Use PORT environment variable (Railway provides this)
-ENV PORT=80
+# Copy built files from builder
+COPY --from=builder /app/dist ./dist
+
+# Railway provides PORT env variable
+ENV PORT=3000
 
 # Expose the port
-EXPOSE 80
+EXPOSE 3000
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start the server using serve with dynamic PORT
+CMD serve -s dist -l $PORT
